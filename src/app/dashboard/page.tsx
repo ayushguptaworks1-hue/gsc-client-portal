@@ -11,7 +11,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [managerPassword, setManagerPassword] = useState('');
-  const [activeTab, setActiveTab] = useState<'clients' | 'create'>('clients');
+  const [activeTab, setActiveTab] = useState<'profiles' | 'clients' | 'create'>('profiles');
 
   // New client form
   const [newClient, setNewClient] = useState({
@@ -22,6 +22,8 @@ export default function Dashboard() {
 
   // Selected client for editing
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  // Show/hide credentials
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
 
   const MANAGER_PASSWORD = 'gsc2024admin';
 
@@ -49,7 +51,6 @@ export default function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load profiles from Supabase
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -75,7 +76,6 @@ export default function Dashboard() {
 
       setProfiles(mapped);
 
-      // Load clients from localStorage
       const savedClients = localStorage.getItem('gsc_clients');
       if (savedClients) {
         setClients(JSON.parse(savedClients));
@@ -90,7 +90,6 @@ export default function Dashboard() {
   const saveClients = (updatedClients: Client[]) => {
     setClients(updatedClients);
     localStorage.setItem('gsc_clients', JSON.stringify(updatedClients));
-    // Also save to cookie so API routes can access it
     document.cookie = `gsc_clients=${encodeURIComponent(JSON.stringify(updatedClients))}; path=/; max-age=${60 * 60 * 24 * 365}`;
   };
 
@@ -131,6 +130,11 @@ export default function Dashboard() {
     if (selectedClient?.id === clientId) {
       setSelectedClient(updated.find((c) => c.id === clientId) || null);
     }
+  };
+
+  const getProfileName = (profileId: string) => {
+    const profile = profiles.find(p => p.id === profileId);
+    return profile?.name || 'Unknown';
   };
 
   // Manager login screen
@@ -189,15 +193,47 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Stats Bar */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-indigo-600">{profiles.length}</p>
+              <p className="text-sm text-gray-500">Total Profiles</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-green-600">{clients.length}</p>
+              <p className="text-sm text-gray-500">Active Clients</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-orange-600">
+                {clients.reduce((sum, c) => sum + c.hiredMembers.length, 0)}
+              </p>
+              <p className="text-sm text-gray-500">Total Hidden Profiles</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Tabs */}
         <div className="flex gap-4 mb-8">
           <button
+            onClick={() => setActiveTab('profiles')}
+            className={`px-6 py-3 rounded-lg font-medium transition ${
+              activeTab === 'profiles'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
+            }`}
+          >
+            All Profiles ({profiles.length})
+          </button>
+          <button
             onClick={() => setActiveTab('clients')}
             className={`px-6 py-3 rounded-lg font-medium transition ${
               activeTab === 'clients'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
             }`}
           >
             Clients ({clients.length})
@@ -206,15 +242,258 @@ export default function Dashboard() {
             onClick={() => setActiveTab('create')}
             className={`px-6 py-3 rounded-lg font-medium transition ${
               activeTab === 'create'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
             }`}
           >
             + Create Client
           </button>
         </div>
 
-        {/* Create Client Tab */}
+        {/* ========== ALL PROFILES TAB ========== */}
+        {activeTab === 'profiles' && (
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">All Team Profiles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {profiles.map((profile) => {
+                // Find which clients have this profile hidden
+                const hiddenFor = clients.filter(c => c.hiredMembers.includes(profile.id));
+                return (
+                  <div key={profile.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
+                    {/* Thumbnail / Media */}
+                    <div className="h-40 bg-gradient-to-br from-indigo-100 to-purple-100 relative overflow-hidden">
+                      {profile.mediaType === 'image' && profile.mediaUrl ? (
+                        <img src={profile.mediaUrl} alt={profile.name} className="w-full h-full object-cover" />
+                      ) : profile.thumbnailUrl ? (
+                        <img src={profile.thumbnailUrl} alt={profile.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="w-16 h-16 bg-indigo-200 rounded-full flex items-center justify-center">
+                            <span className="text-2xl font-bold text-indigo-600">
+                              {profile.name.charAt(0)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          profile.availability === 'Available'
+                            ? 'bg-green-100 text-green-700'
+                            : profile.availability === 'Busy'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {profile.availability}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="font-bold text-gray-900 text-lg">{profile.name}</h3>
+                      <p className="text-sm text-indigo-600 font-medium">{profile.role}</p>
+                      <p className="text-xs text-gray-500 mt-1">{profile.experience} experience</p>
+
+                      {/* Skills */}
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {profile.skills.slice(0, 4).map((skill) => (
+                          <span key={skill} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                            {skill}
+                          </span>
+                        ))}
+                        {profile.skills.length > 4 && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">
+                            +{profile.skills.length - 4}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Hidden for clients */}
+                      {hiddenFor.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-xs font-semibold text-red-600 mb-1">
+                            Hidden for {hiddenFor.length} client{hiddenFor.length > 1 ? 's' : ''}:
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {hiddenFor.map(c => (
+                              <span key={c.id} className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full border border-red-200">
+                                {c.companyName}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ========== CLIENTS TAB ========== */}
+        {activeTab === 'clients' && (
+          <div>
+            {/* Client Cards with full details */}
+            {clients.length === 0 ? (
+              <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <p className="text-lg font-medium">No clients yet</p>
+                <p className="text-sm mt-1">Create a client to get started.</p>
+                <button
+                  onClick={() => setActiveTab('create')}
+                  className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium"
+                >
+                  + Create Client
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {clients.map((client) => {
+                  const visibleCount = profiles.length - client.hiredMembers.length;
+                  const hiddenNames = client.hiredMembers.map(id => getProfileName(id));
+                  const isExpanded = selectedClient?.id === client.id;
+                  const passwordVisible = showPasswords[client.id];
+
+                  return (
+                    <div key={client.id} className="bg-white rounded-xl shadow-md overflow-hidden">
+                      {/* Client Header */}
+                      <div
+                        className="p-5 cursor-pointer hover:bg-gray-50 transition"
+                        onClick={() => setSelectedClient(isExpanded ? null : client)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <span className="text-lg font-bold text-indigo-600">
+                                  {client.companyName.charAt(0)}
+                                </span>
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-gray-900">{client.companyName}</h3>
+                                <p className="text-xs text-gray-400">Created: {new Date(client.createdAt).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+
+                            {/* Credentials */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-xs text-gray-500 font-medium mb-1">Login ID</p>
+                                <p className="font-mono text-sm font-bold text-gray-900">{client.loginId}</p>
+                              </div>
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-xs text-gray-500 font-medium mb-1">Password</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-mono text-sm font-bold text-gray-900">
+                                    {passwordVisible ? client.password : '••••••••'}
+                                  </p>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowPasswords(prev => ({ ...prev, [client.id]: !prev[client.id] }));
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      {passwordVisible ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                      ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                      )}
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-xs text-gray-500 font-medium mb-1">Profile Access</p>
+                                <p className="text-sm font-bold">
+                                  <span className="text-green-600">{visibleCount} visible</span>
+                                  {client.hiredMembers.length > 0 && (
+                                    <span className="text-red-600"> / {client.hiredMembers.length} hidden</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Hidden profile names - quick preview */}
+                            {hiddenNames.length > 0 && (
+                              <div className="mt-3">
+                                <p className="text-xs text-gray-500">
+                                  Hidden: <span className="font-medium text-red-600">{hiddenNames.join(', ')}</span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 ml-4">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteClient(client.id);
+                              }}
+                              className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition"
+                              title="Delete client"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                            <svg className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Expanded: Profile Toggle Panel */}
+                      {isExpanded && (
+                        <div className="border-t bg-gray-50 p-5">
+                          <p className="text-sm font-semibold text-gray-700 mb-3">
+                            Toggle profile visibility for {client.companyName}:
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {profiles.map((profile) => {
+                              const isHidden = client.hiredMembers.includes(profile.id);
+                              return (
+                                <div
+                                  key={profile.id}
+                                  className={`flex items-center justify-between p-3 rounded-lg border transition cursor-pointer ${
+                                    isHidden
+                                      ? 'bg-red-50 border-red-200 hover:bg-red-100'
+                                      : 'bg-green-50 border-green-200 hover:bg-green-100'
+                                  }`}
+                                  onClick={() => toggleHiredMember(client.id, profile.id)}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-gray-900 text-sm truncate">{profile.name}</p>
+                                    <p className="text-xs text-gray-500 truncate">{profile.role}</p>
+                                  </div>
+                                  <span
+                                    className={`ml-2 px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
+                                      isHidden
+                                        ? 'bg-red-100 text-red-700'
+                                        : 'bg-green-100 text-green-700'
+                                    }`}
+                                  >
+                                    {isHidden ? 'HIDDEN' : 'VISIBLE'}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========== CREATE CLIENT TAB ========== */}
         {activeTab === 'create' && (
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-lg">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Create New Client</h2>
@@ -256,108 +535,6 @@ export default function Dashboard() {
                 Create Client
               </button>
             </form>
-          </div>
-        )}
-
-        {/* Clients List Tab */}
-        {activeTab === 'clients' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Client List */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-gray-900">All Clients</h2>
-              {clients.length === 0 ? (
-                <div className="bg-white rounded-xl shadow p-6 text-center text-gray-500">
-                  No clients yet. Create one first.
-                </div>
-              ) : (
-                clients.map((client) => (
-                  <div
-                    key={client.id}
-                    className={`bg-white rounded-xl shadow p-4 cursor-pointer transition border-2 ${
-                      selectedClient?.id === client.id
-                        ? 'border-indigo-500'
-                        : 'border-transparent hover:border-gray-200'
-                    }`}
-                    onClick={() => setSelectedClient(client)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-gray-900">{client.companyName}</h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Login: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{client.loginId}</span>
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Password: <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{client.password}</span>
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Hidden profiles: <span className="font-bold text-red-600">{client.hiredMembers.length}</span>
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteClient(client.id);
-                        }}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Profile Toggle Panel */}
-            <div>
-              {selectedClient ? (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    Manage: {selectedClient.companyName}
-                  </h2>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Toggle profiles to hide them from this client. Hidden profiles won&apos;t appear when they log in.
-                  </p>
-
-                  <div className="space-y-3">
-                    {profiles.map((profile) => {
-                      const isHidden = selectedClient.hiredMembers.includes(profile.id);
-                      return (
-                        <div
-                          key={profile.id}
-                          className={`flex items-center justify-between p-3 rounded-lg border transition cursor-pointer ${
-                            isHidden
-                              ? 'bg-red-50 border-red-200'
-                              : 'bg-green-50 border-green-200'
-                          }`}
-                          onClick={() => toggleHiredMember(selectedClient.id, profile.id)}
-                        >
-                          <div>
-                            <p className="font-medium text-gray-900">{profile.name}</p>
-                            <p className="text-sm text-gray-500">{profile.role}</p>
-                          </div>
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              isHidden
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-green-100 text-green-700'
-                            }`}
-                          >
-                            {isHidden ? 'HIDDEN' : 'VISIBLE'}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl shadow p-6 text-center text-gray-500">
-                  Select a client to manage their profile visibility
-                </div>
-              )}
-            </div>
           </div>
         )}
       </main>

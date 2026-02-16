@@ -1,20 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Profile } from '@/types/profile';
 import { supabase } from '@/lib/supabase';
 import ProfileCard from '@/components/ProfileCard';
+import FilterPanel from '@/components/FilterPanel';
 
 export default function GscTeamProfile() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [session, setSession] = useState<{
     authenticated: boolean;
     companyName?: string;
     hiredMembers?: string[];
   }>({ authenticated: false });
+  const [filters, setFilters] = useState({
+    role: '',
+    availability: '',
+    selectedSkills: [] as string[],
+    searchQuery: ''
+  });
   const router = useRouter();
+
+  const ITEMS_PER_PAGE = 8;
 
   useEffect(() => {
     checkSessionAndLoad();
@@ -22,7 +32,6 @@ export default function GscTeamProfile() {
 
   const checkSessionAndLoad = async () => {
     try {
-      // Check session
       const sessionRes = await fetch('/api/auth/session');
       const sessionData = await sessionRes.json();
       setSession(sessionData);
@@ -32,11 +41,10 @@ export default function GscTeamProfile() {
         return;
       }
 
-      // Load profiles from Supabase
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .order('name');
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -69,63 +77,186 @@ export default function GscTeamProfile() {
     router.push('/login');
   };
 
-  // INVISIBLE FILTERING - Remove hired members before display
-  const visibleProfiles = profiles.filter(
-    (p) => !session.hiredMembers?.includes(p.id)
-  );
+  // INVISIBLE FILTERING - Remove hired members BEFORE any user filters
+  const availableProfiles = useMemo(() => {
+    return profiles.filter(p => !session.hiredMembers?.includes(p.id));
+  }, [profiles, session.hiredMembers]);
+
+  const roles = useMemo(() => {
+    return Array.from(new Set(availableProfiles.map(p => p.role)));
+  }, [availableProfiles]);
+
+  const skills = useMemo(() => {
+    const skillsSet = new Set<string>();
+    availableProfiles.forEach(p => p.skills.forEach(skill => skillsSet.add(skill)));
+    return Array.from(skillsSet).sort();
+  }, [availableProfiles]);
+
+  const filteredProfiles = useMemo(() => {
+    return availableProfiles.filter(profile => {
+      if (filters.searchQuery && !profile.name.toLowerCase().includes(filters.searchQuery.toLowerCase())) return false;
+      if (filters.role && profile.role !== filters.role) return false;
+      if (filters.availability && profile.availability !== filters.availability) return false;
+      if (filters.selectedSkills.length > 0) {
+        const hasAll = filters.selectedSkills.every(skill => profile.skills.includes(skill));
+        if (!hasAll) return false;
+      }
+      return true;
+    });
+  }, [filters, availableProfiles]);
+
+  const totalPages = Math.ceil(filteredProfiles.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentProfiles = filteredProfiles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading team profiles...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-lg">Loading profiles...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white py-6 px-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">GSC Outsourcing</h1>
-            <p className="text-blue-200 text-sm">
-              Welcome, {session.companyName || 'Client'}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Hero Header - Same as original */}
+      <header className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex justify-between items-center">
+            <div className="text-white">
+              <h1 className="text-5xl font-bold mb-4 drop-shadow-lg">Team Profile</h1>
+              <p className="text-xl text-indigo-100 max-w-2xl">
+                Meet our talented professionals bringing expertise and innovation to every project
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-white text-red-600 px-6 py-3 rounded-lg hover:bg-red-50 transition-all duration-200 font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
+            >
+              Logout
+            </button>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition text-sm font-medium"
-          >
-            Logout
-          </button>
         </div>
       </header>
 
-      {/* Profiles */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Available Team Members</h2>
-          <p className="text-gray-600 mt-1">
-            Showing <span className="font-bold text-indigo-600">{visibleProfiles.length}</span> available profiles
-          </p>
-        </div>
+      {/* Main Content - Same layout as original */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Filters Sidebar */}
+          <aside className="lg:col-span-1">
+            <FilterPanel
+              roles={roles}
+              skills={skills}
+              initialFilters={filters}
+              onFilterChange={setFilters}
+            />
+          </aside>
 
-        {visibleProfiles.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visibleProfiles.map(profile => (
-              <ProfileCard key={profile.id} profile={profile} />
-            ))}
+          {/* Profiles Grid */}
+          <div className="lg:col-span-3">
+            <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
+              <p className="text-gray-700 text-lg">
+                Showing <span className="font-bold text-indigo-600">{currentProfiles.length}</span> of{' '}
+                <span className="font-bold">{filteredProfiles.length}</span> profiles
+              </p>
+            </div>
+
+            {/* Pagination - Top */}
+            {totalPages > 1 && currentProfiles.length > 0 && (
+              <div className="mb-6 flex justify-center items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+                >
+                  Previous
+                </button>
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-2 rounded-lg font-medium text-sm ${
+                        currentPage === page
+                          ? 'bg-indigo-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+
+            {currentProfiles.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {currentProfiles.map(profile => (
+                    <ProfileCard key={profile.id} profile={profile} />
+                  ))}
+                </div>
+
+                {/* Pagination - Bottom */}
+                {totalPages > 1 && (
+                  <div className="mt-8 flex justify-center items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      Previous
+                    </button>
+                    <div className="flex gap-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-4 py-2 rounded-lg font-medium ${
+                            currentPage === page
+                              ? 'bg-indigo-600 text-white'
+                              : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16 bg-white rounded-lg shadow-md">
+                <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <h3 className="mt-4 text-xl font-semibold text-gray-900">No profiles found</h3>
+                <p className="mt-2 text-gray-600">Try adjusting your filters to see more results.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="text-center py-16 bg-white rounded-lg shadow">
-            <p className="text-gray-500 text-lg">No available team members at this time.</p>
-            <p className="text-gray-400 mt-2">Please contact your account manager for assistance.</p>
-          </div>
-        )}
+        </div>
       </main>
     </div>
   );
