@@ -254,78 +254,86 @@ export default function Dashboard() {
         {activeTab === 'profiles' && (
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-6">All Team Profiles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profiles.map((profile) => {
-                // Find which clients have this profile hidden
-                const hiddenFor = clients.filter(c => c.hiredMembers.includes(profile.id));
-                return (
-                  <div key={profile.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
-                    {/* Thumbnail / Media */}
-                    <div className="h-40 bg-gradient-to-br from-indigo-100 to-purple-100 relative overflow-hidden">
-                      {profile.mediaType === 'image' && profile.mediaUrl ? (
-                        <img src={profile.mediaUrl} alt={profile.name} className="w-full h-full object-cover" />
-                      ) : profile.thumbnailUrl ? (
-                        <img src={profile.thumbnailUrl} alt={profile.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <div className="w-16 h-16 bg-indigo-200 rounded-full flex items-center justify-center">
-                            <span className="text-2xl font-bold text-indigo-600">
-                              {profile.name.charAt(0)}
-                            </span>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">#</th>
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Name</th>
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Role</th>
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Experience</th>
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Availability</th>
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Skills</th>
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Hidden For</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profiles.map((profile, index) => {
+                    const hiddenFor = clients.filter(c => c.hiredMembers.includes(profile.id));
+                    return (
+                      <tr key={profile.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td className="py-4 text-sm text-gray-500">{index + 1}</td>
+                        <td className="py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-indigo-100 flex-shrink-0">
+                              {profile.mediaType === 'image' && profile.mediaUrl ? (
+                                <img src={profile.mediaUrl} alt={profile.name} className="w-full h-full object-cover" />
+                              ) : profile.thumbnailUrl ? (
+                                <img src={profile.thumbnailUrl} alt={profile.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-sm font-bold text-indigo-600">{profile.name.charAt(0)}</span>
+                                </div>
+                              )}
+                            </div>
+                            <span className="font-semibold text-gray-900 text-sm">{profile.name}</span>
                           </div>
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          profile.availability === 'Available'
-                            ? 'bg-green-100 text-green-700'
-                            : profile.availability === 'Busy'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {profile.availability}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-4">
-                      <h3 className="font-bold text-gray-900 text-lg">{profile.name}</h3>
-                      <p className="text-sm text-indigo-600 font-medium">{profile.role}</p>
-                      <p className="text-xs text-gray-500 mt-1">{profile.experience} experience</p>
-
-                      {/* Skills */}
-                      <div className="flex flex-wrap gap-1 mt-3">
-                        {profile.skills.slice(0, 4).map((skill) => (
-                          <span key={skill} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                            {skill}
+                        </td>
+                        <td className="py-4 text-sm text-indigo-600 font-medium">{profile.role}</td>
+                        <td className="py-4 text-sm text-gray-600">{profile.experience}</td>
+                        <td className="py-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                            profile.availability === 'Available'
+                              ? 'bg-green-100 text-green-700'
+                              : profile.availability === 'Busy'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {profile.availability}
                           </span>
-                        ))}
-                        {profile.skills.length > 4 && (
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">
-                            +{profile.skills.length - 4}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Hidden for clients */}
-                      {hiddenFor.length > 0 && (
-                        <div className="mt-3 pt-3 border-t">
-                          <p className="text-xs font-semibold text-red-600 mb-1">
-                            Hidden for {hiddenFor.length} client{hiddenFor.length > 1 ? 's' : ''}:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {hiddenFor.map(c => (
-                              <span key={c.id} className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full border border-red-200">
-                                {c.companyName}
+                        </td>
+                        <td className="py-4">
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {profile.skills.slice(0, 3).map((skill) => (
+                              <span key={skill} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                {skill}
                               </span>
                             ))}
+                            {profile.skills.length > 3 && (
+                              <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">
+                                +{profile.skills.length - 3}
+                              </span>
+                            )}
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                        </td>
+                        <td className="py-4">
+                          {hiddenFor.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {hiddenFor.map(c => (
+                                <span key={c.id} className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full border border-red-200">
+                                  {c.companyName}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
