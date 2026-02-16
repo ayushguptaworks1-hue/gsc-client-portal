@@ -1,43 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
     const { loginId, password } = await request.json();
 
-    // Read clients from cookie (set by dashboard)
-    const storedClientsData = request.cookies.get('gsc_clients')?.value;
-    let allClients: Array<{
-      id: string;
-      companyName: string;
-      loginId: string;
-      password: string;
-      hiredMembers: string[];
-    }> = [];
-    
-    if (storedClientsData) {
-      try {
-        allClients = JSON.parse(decodeURIComponent(storedClientsData));
-      } catch {
-        // ignore parse errors
-      }
+    // Read clients from Supabase
+    const { data: clients, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('login_id', loginId)
+      .eq('password', password)
+      .limit(1);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { success: false, message: 'Login failed' },
+        { status: 500 }
+      );
     }
 
-    const client = allClients.find(
-      (c) => c.loginId === loginId && c.password === password
-    );
+    const client = clients?.[0];
 
     if (client) {
       const response = NextResponse.json({
         success: true,
-        companyName: client.companyName,
+        companyName: client.company_name,
       });
 
       // Set session cookie
       response.cookies.set('gsc_client_session', JSON.stringify({
         authenticated: true,
         clientId: client.id,
-        companyName: client.companyName,
-        hiredMembers: client.hiredMembers,
+        companyName: client.company_name,
+        hiredMembers: client.hired_members || [],
       }), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

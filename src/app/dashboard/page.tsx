@@ -76,9 +76,24 @@ export default function Dashboard() {
 
       setProfiles(mapped);
 
-      const savedClients = localStorage.getItem('gsc_clients');
-      if (savedClients) {
-        setClients(JSON.parse(savedClients));
+      // Load clients from Supabase
+      const { data: clientsData, error: clientsError } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (clientsError) {
+        console.error('Error loading clients:', clientsError);
+      } else {
+        const mappedClients: Client[] = (clientsData || []).map((c: Record<string, unknown>) => ({
+          id: String(c.id),
+          companyName: String(c.company_name || ''),
+          loginId: String(c.login_id || ''),
+          password: String(c.password || ''),
+          hiredMembers: Array.isArray(c.hired_members) ? c.hired_members as string[] : [],
+          createdAt: String(c.created_at || ''),
+        }));
+        setClients(mappedClients);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -87,46 +102,72 @@ export default function Dashboard() {
     }
   };
 
-  const saveClients = (updatedClients: Client[]) => {
-    setClients(updatedClients);
-    localStorage.setItem('gsc_clients', JSON.stringify(updatedClients));
-    document.cookie = `gsc_clients=${encodeURIComponent(JSON.stringify(updatedClients))}; path=/; max-age=${60 * 60 * 24 * 365}`;
-  };
-
-  const createClient = (e: React.FormEvent) => {
+  const createClient = async (e: React.FormEvent) => {
     e.preventDefault();
+    const { data, error } = await supabase
+      .from('clients')
+      .insert({
+        company_name: newClient.companyName,
+        login_id: newClient.loginId,
+        password: newClient.password,
+        hired_members: [],
+      })
+      .select()
+      .single();
+
+    if (error) {
+      alert('Error creating client: ' + error.message);
+      return;
+    }
+
     const client: Client = {
-      id: Date.now().toString(),
-      companyName: newClient.companyName,
-      loginId: newClient.loginId,
-      password: newClient.password,
+      id: String(data.id),
+      companyName: String(data.company_name),
+      loginId: String(data.login_id),
+      password: String(data.password),
       hiredMembers: [],
-      createdAt: new Date().toISOString(),
+      createdAt: String(data.created_at),
     };
-    saveClients([...clients, client]);
+    setClients([client, ...clients]);
     setNewClient({ companyName: '', loginId: '', password: '' });
     setActiveTab('clients');
     alert(`Client created!\n\nLogin ID: ${client.loginId}\nPassword: ${client.password}`);
   };
 
-  const deleteClient = (id: string) => {
+  const deleteClient = async (id: string) => {
     if (confirm('Are you sure you want to delete this client?')) {
-      saveClients(clients.filter((c) => c.id !== id));
+      const { error } = await supabase.from('clients').delete().eq('id', id);
+      if (error) {
+        alert('Error deleting client: ' + error.message);
+        return;
+      }
+      setClients(clients.filter((c) => c.id !== id));
       if (selectedClient?.id === id) setSelectedClient(null);
     }
   };
 
-  const toggleHiredMember = (clientId: string, profileId: string) => {
-    const updated = clients.map((c) => {
-      if (c.id === clientId) {
-        const hired = c.hiredMembers.includes(profileId)
-          ? c.hiredMembers.filter((id) => id !== profileId)
-          : [...c.hiredMembers, profileId];
-        return { ...c, hiredMembers: hired };
-      }
-      return c;
-    });
-    saveClients(updated);
+  const toggleHiredMember = async (clientId: string, profileId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    const newHired = client.hiredMembers.includes(profileId)
+      ? client.hiredMembers.filter((id) => id !== profileId)
+      : [...client.hiredMembers, profileId];
+
+    const { error } = await supabase
+      .from('clients')
+      .update({ hired_members: newHired })
+      .eq('id', clientId);
+
+    if (error) {
+      alert('Error updating: ' + error.message);
+      return;
+    }
+
+    const updated = clients.map((c) =>
+      c.id === clientId ? { ...c, hiredMembers: newHired } : c
+    );
+    setClients(updated);
     if (selectedClient?.id === clientId) {
       setSelectedClient(updated.find((c) => c.id === clientId) || null);
     }
