@@ -47,7 +47,7 @@ import { useRouter } from 'next/navigation';
   };
 
   return (
-    <div className="bg-white flex flex-col items-center justify-center relative" ref={loginRef}>
+    <div className="bg-white min-h-screen flex flex-col items-center justify-center relative" ref={loginRef}>
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-[0.4]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)',
