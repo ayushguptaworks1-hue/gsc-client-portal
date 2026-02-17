@@ -51,22 +51,9 @@ export default function LoginPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-100/60 rounded-full blur-[120px]"></div>
 
       <div className="relative z-10 w-full max-w-[420px] px-6">
-        {/* GSC Brand - matching your logo style */}
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center gap-3 mb-4">
-            {/* Shield icon matching GSC logo */}
-            <div className="w-11 h-11 rounded-lg bg-[#1a2340] flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v5.7c0 4.47-2.98 8.63-7 9.82-4.02-1.19-7-5.35-7-9.82V6.3l7-3.12z"/>
-                <path d="M12 7c-1.1 0-2 .9-2 2v2c-.55 0-1 .45-1 1v3c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-3c0-.55-.45-1-1-1V9c0-1.1-.9-2-2-2zm1 4h-2V9c0-.55.45-1 1-1s1 .45 1 1v2z"/>
-              </svg>
-            </div>
-            <div className="text-left">
-              <h2 className="text-[22px] font-bold text-[#1a2340] tracking-tight leading-none">GSC</h2>
-              <p className="text-[10px] text-slate-400 font-semibold tracking-[0.2em] uppercase mt-0.5">Outsourcing</p>
-            </div>
-          </div>
-          <h1 className="text-[26px] font-bold text-slate-800 tracking-tight mt-3">Client Portal</h1>
+          <h1 className="text-[26px] font-bold text-slate-800 tracking-tight">Client Portal</h1>
           <p className="text-slate-400 mt-1.5 text-[15px]">Sign in to access your team profiles</p>
         </div>
 
