@@ -40,50 +40,53 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1628] flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Subtle grid pattern */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-        backgroundSize: '60px 60px'
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-[0.4]" style={{
+        backgroundImage: 'radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)',
+        backgroundSize: '40px 40px'
       }}></div>
-      
-      {/* Glow accents */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-cyan-500/[0.04] rounded-full blur-[120px]"></div>
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-teal-500/[0.06] rounded-full blur-[80px]"></div>
+
+      {/* Accent glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-100/60 rounded-full blur-[120px]"></div>
 
       <div className="relative z-10 w-full max-w-[420px] px-6">
-        {/* Logo / Brand */}
+        {/* GSC Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-400 mb-5 shadow-lg shadow-cyan-500/20">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-            </svg>
+          <div className="inline-flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-[#1a2340] flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg tracking-wide">G</span>
+            </div>
+            <div className="text-left">
+              <h2 className="text-[22px] font-bold text-[#1a2340] tracking-tight leading-tight">GSC</h2>
+              <p className="text-[11px] text-slate-400 font-medium tracking-widest uppercase">Outsourcing</p>
+            </div>
           </div>
-          <h1 className="text-[28px] font-bold text-white tracking-tight">Client Portal</h1>
-          <p className="text-slate-400 mt-2 text-[15px]">Sign in to access your team profiles</p>
+          <h1 className="text-[26px] font-bold text-slate-800 tracking-tight mt-3">Client Portal</h1>
+          <p className="text-slate-400 mt-1.5 text-[15px]">Sign in to access your team profiles</p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#111d32] rounded-2xl border border-slate-700/50 p-7 shadow-xl">
+        <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-xl shadow-slate-200/50">
           {/* Error */}
           {error && (
-            <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <span className="text-red-300 text-sm">{error}</span>
+              <span className="text-red-600 text-sm">{error}</span>
             </div>
           )}
 
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Login ID</label>
-              <div className={`relative rounded-xl transition-all duration-200 ${focusedField === 'loginId' ? 'ring-2 ring-cyan-500/40' : ''}`}>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Login ID</label>
+              <div className={`relative rounded-xl transition-all duration-200 ${focusedField === 'loginId' ? 'ring-2 ring-blue-500/30' : ''}`}>
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className={`w-[18px] h-[18px] transition-colors ${focusedField === 'loginId' ? 'text-cyan-400' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-[18px] h-[18px] transition-colors ${focusedField === 'loginId' ? 'text-blue-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                   </svg>
                 </div>
@@ -93,7 +96,7 @@ export default function LoginPage() {
                   onChange={(e) => setLoginId(e.target.value)}
                   onFocus={() => setFocusedField('loginId')}
                   onBlur={() => setFocusedField(null)}
-                  className="w-full pl-11 pr-4 py-3.5 bg-[#0a1628] border border-slate-700/60 rounded-xl text-white placeholder-slate-500 focus:outline-none transition text-[15px]"
+                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition text-[15px]"
                   placeholder="Enter your login ID"
                   required
                 />
@@ -101,10 +104,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
-              <div className={`relative rounded-xl transition-all duration-200 ${focusedField === 'password' ? 'ring-2 ring-cyan-500/40' : ''}`}>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+              <div className={`relative rounded-xl transition-all duration-200 ${focusedField === 'password' ? 'ring-2 ring-blue-500/30' : ''}`}>
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className={`w-[18px] h-[18px] transition-colors ${focusedField === 'password' ? 'text-cyan-400' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-[18px] h-[18px] transition-colors ${focusedField === 'password' ? 'text-blue-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                   </svg>
                 </div>
@@ -114,14 +117,14 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField(null)}
-                  className="w-full pl-11 pr-12 py-3.5 bg-[#0a1628] border border-slate-700/60 rounded-xl text-white placeholder-slate-500 focus:outline-none transition text-[15px]"
+                  className="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition text-[15px]"
                   placeholder="Enter your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-300 transition"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition"
                 >
                   <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     {showPassword ? (
@@ -140,7 +143,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-cyan-500 to-teal-400 text-white py-3.5 rounded-xl hover:from-cyan-400 hover:to-teal-300 transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/30 flex items-center justify-center gap-2 text-[15px] mt-2"
+              className="w-full bg-[#1a2340] text-white py-3.5 rounded-xl hover:bg-[#243052] transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-300/50 hover:shadow-xl flex items-center justify-center gap-2 text-[15px] mt-2"
             >
               {loading ? (
                 <>
@@ -164,22 +167,22 @@ export default function LoginPage() {
 
         {/* Trust indicators */}
         <div className="flex items-center justify-center gap-6 mt-7">
-          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-            <svg className="w-3.5 h-3.5 text-teal-500" fill="currentColor" viewBox="0 0 20 20">
+          <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+            <svg className="w-3.5 h-3.5 text-[#1a2340]" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
             </svg>
             Secure Login
           </div>
-          <div className="w-px h-3 bg-slate-700"></div>
-          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-            <svg className="w-3.5 h-3.5 text-teal-500" fill="currentColor" viewBox="0 0 20 20">
+          <div className="w-px h-3 bg-slate-200"></div>
+          <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+            <svg className="w-3.5 h-3.5 text-[#1a2340]" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             256-bit Encrypted
           </div>
         </div>
 
-        <p className="text-center mt-5 text-slate-600 text-xs">
+        <p className="text-center mt-5 text-slate-400 text-xs">
           Need access? Contact your account manager at GSC Outsourcing
         </p>
       </div>
