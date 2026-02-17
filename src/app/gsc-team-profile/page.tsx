@@ -115,7 +115,7 @@ export default function GscTeamProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="h-screen bg-white flex items-center justify-center overflow-hidden">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 text-lg">Loading profiles...</p>
@@ -125,29 +125,9 @@ export default function GscTeamProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Hero Header - Same as original */}
-      <header className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex justify-between items-center">
-            <div className="text-white">
-              <h1 className="text-5xl font-bold mb-4 drop-shadow-lg">Team Profile</h1>
-              <p className="text-xl text-indigo-100 max-w-2xl">
-                Meet our talented professionals bringing expertise and innovation to every project
-              </p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="bg-white text-red-600 px-6 py-3 rounded-lg hover:bg-red-50 transition-all duration-200 font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content - Same layout as original */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="h-screen bg-white overflow-auto">
+      {/* Main Content - Clean layout for iframe */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
           <aside className="lg:col-span-1">
