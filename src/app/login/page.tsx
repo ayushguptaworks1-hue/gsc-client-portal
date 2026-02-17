@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function LoginPage() {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,6 +10,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const router = useRouter();
+  const loginRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Only auto-scroll if inside an iframe
+    if (window.self !== window.top && loginRef.current) {
+      loginRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +47,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-white flex flex-col items-center justify-center relative">
+    <div className="bg-white flex flex-col items-center justify-center relative" ref={loginRef}>
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-[0.4]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)',
