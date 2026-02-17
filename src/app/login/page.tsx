@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen bg-white flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="bg-white flex flex-col items-center justify-center relative">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-[0.4]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)',
