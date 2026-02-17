@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         companyName: client.company_name,
       });
 
-      // Set session cookie
+      // Set session cookie - sameSite: 'none' required for cross-origin iframe
       response.cookies.set('gsc_client_session', JSON.stringify({
         authenticated: true,
         clientId: client.id,
@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
         hiredMembers: client.hired_members || [],
       }), {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/',
       });
