@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+export default function LoginPage() {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -10,20 +11,6 @@ import { useRouter } from 'next/navigation';
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const router = useRouter();
-  const loginRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Only auto-scroll if inside an iframe
-    if (window.self !== window.top && loginRef.current) {
-      loginRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Ask parent page to center the iframe in the viewport
-      try {
-        window.parent.postMessage({ type: 'gsc-scroll-to-login' }, '*');
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +39,38 @@ import { useRouter } from 'next/navigation';
     }
   };
 
+  // Send iframe height to parent so the WP page can resize the iframe (no scrolling)
+  React.useEffect(() => {
+    const sendHeight = () => {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'iframeHeight', height: document.documentElement.scrollHeight }, '*');
+        }
+      } catch (e) {
+        /* ignore cross-origin errors */
+      }
+    };
+
+    // initial send
+    sendHeight();
+
+    // observe resizes and DOM changes
+    const ro = new ResizeObserver(sendHeight);
+    ro.observe(document.documentElement);
+    window.addEventListener('resize', sendHeight);
+
+    // periodic backup (clears on unmount)
+    const interval = setInterval(sendHeight, 700);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', sendHeight);
+      clearInterval(interval);
+    };
+  }, [error, loading, loginId, password, showPassword, focusedField]);
+
   return (
-    <div className="bg-white min-h-screen flex flex-col items-center justify-center relative" ref={loginRef}>
+    <div className="h-screen bg-white flex flex-col items-center justify-center relative overflow-hidden">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-[0.4]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)',

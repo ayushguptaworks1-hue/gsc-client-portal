@@ -113,9 +113,34 @@ export default function GscTeamProfile() {
     setCurrentPage(1);
   }, [filters]);
 
+  // Post height to parent so iframe can be resized by WordPress (keeps content centered in viewport)
+  useEffect(() => {
+    const sendHeight = () => {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'iframeHeight', height: document.documentElement.scrollHeight }, '*');
+        }
+      } catch (e) {
+        /* ignore cross-origin */
+      }
+    };
+
+    sendHeight();
+    const ro = new ResizeObserver(sendHeight);
+    ro.observe(document.documentElement);
+    window.addEventListener('resize', sendHeight);
+    const interval = setInterval(sendHeight, 800);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', sendHeight);
+      clearInterval(interval);
+    };
+  }, [profiles, filters, currentPage]);
+
   if (loading) {
     return (
-      <div className="bg-white flex items-center justify-center" style={{minHeight: 400}}>
+      <div className="min-h-[400px] bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 text-lg">Loading profiles...</p>
