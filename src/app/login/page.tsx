@@ -16,6 +16,12 @@ import { useRouter } from 'next/navigation';
     // Only auto-scroll if inside an iframe
     if (window.self !== window.top && loginRef.current) {
       loginRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Ask parent page to center the iframe in the viewport
+      try {
+        window.parent.postMessage({ type: 'gsc-scroll-to-login' }, '*');
+      } catch (e) {
+        // ignore
+      }
     }
   }, []);
 
