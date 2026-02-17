@@ -104,34 +104,36 @@ export default function Dashboard() {
 
   const createClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data, error } = await supabase
-      .from('clients')
-      .insert({
-        company_name: newClient.companyName,
-        login_id: newClient.loginId,
-        password: newClient.password,
-        hired_members: [],
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .insert({
+          company_name: newClient.companyName,
+          login_id: newClient.loginId,
+          password: newClient.password,
+          hired_members: [],
+        })
+        .select()
+        .single();
 
-    if (error) {
-      alert('Error creating client: ' + error.message);
-      return;
+      if (error) {
+        alert('Error creating client: ' + error.message);
+        return;
+      }
+
+      if (!data) {
+        alert('Error: No data returned after creating client');
+        return;
+      }
+
+      setNewClient({ companyName: '', loginId: '', password: '' });
+      setActiveTab('clients');
+      alert(`Client created!\n\nLogin ID: ${newClient.loginId}\nPassword: ${newClient.password}`);
+      // Reload all data to get fresh list from Supabase
+      await loadData();
+    } catch (err) {
+      alert('Error creating client: ' + String(err));
     }
-
-    const client: Client = {
-      id: String(data.id),
-      companyName: String(data.company_name),
-      loginId: String(data.login_id),
-      password: String(data.password),
-      hiredMembers: [],
-      createdAt: String(data.created_at),
-    };
-    setClients([client, ...clients]);
-    setNewClient({ companyName: '', loginId: '', password: '' });
-    setActiveTab('clients');
-    alert(`Client created!\n\nLogin ID: ${client.loginId}\nPassword: ${client.password}`);
   };
 
   const deleteClient = async (id: string) => {
