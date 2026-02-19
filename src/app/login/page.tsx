@@ -49,25 +49,10 @@ export default function LoginPage() {
           }
 
           const targetPath = '/gsc-team-profile';
-          const absoluteTarget = 'https://gsc-client-portal.vercel.app' + targetPath;
 
-          // If embedded in an iframe, navigate the top window so the profile opens standalone
-          try {
-            if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
-              try {
-                window.top.location.href = absoluteTarget;
-              } catch (err) {
-                // If cross-origin prevents setting top.location, open in new tab as fallback
-                window.open(absoluteTarget, '_blank');
-              }
-            } else {
-              router.push(targetPath);
-              router.refresh();
-            }
-          } catch (err) {
-            // final fallback
-            window.location.href = absoluteTarget;
-          }
+          // Stay inside iframe - navigate within the iframe
+          router.push(targetPath);
+          router.refresh();
       } else {
         setError(data.message || 'Invalid credentials');
       }
