@@ -19,25 +19,6 @@ export default function LoginPage() {
       }
     }, []);
 
-  // Auto-scroll to center the login form when embedded in iframe
-  useEffect(() => {
-    const isInIframe = window.parent && window.parent !== window;
-    if (isInIframe) {
-      // Tell WordPress parent to scroll to show login form centered
-      setTimeout(() => {
-        const formCard = document.getElementById('login-card');
-        if (formCard) {
-          const rect = formCard.getBoundingClientRect();
-          // Send scroll position to parent so it can scroll the page
-          window.parent.postMessage({ 
-            type: 'scrollToElement', 
-            offsetTop: rect.top + 200 // Add offset to center-ish in viewport
-          }, '*');
-        }
-      }, 300);
-    }
-  }, []);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -102,14 +83,16 @@ export default function LoginPage() {
     const sendHeight = () => {
       try {
         if (window.parent && window.parent !== window) {
-          // Don't change iframe size - keep it at WordPress setting (2950px)
-          // Don't send height message so WordPress keeps its original size
+          // Send smaller height for login page so form appears centered
+          window.parent.postMessage({ type: 'iframeHeight', height: 700 }, '*');
         }
       } catch (e) {
         /* ignore cross-origin errors */
       }
     };
 
+    setTimeout(sendHeight, 100);
+    setTimeout(sendHeight, 500);
     sendHeight();
 
     // observe resizes and DOM changes
@@ -128,7 +111,7 @@ export default function LoginPage() {
   }, [error, loading, loginId, password, showPassword, focusedField]);
 
   return (
-    <div className="bg-white flex flex-col items-center justify-center relative overflow-x-hidden" style={{ height: '2950px' }}>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center relative overflow-x-hidden py-12">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-[0.4]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)',
@@ -136,7 +119,7 @@ export default function LoginPage() {
       }}></div>
 
       {/* Accent glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-blue-100/60 rounded-full blur-[120px]"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-100/60 rounded-full blur-[120px]"></div>
 
       <div className="relative z-10 w-full max-w-[420px] px-6">
         {/* Header */}
