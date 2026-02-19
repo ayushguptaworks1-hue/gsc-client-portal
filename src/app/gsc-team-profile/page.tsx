@@ -133,38 +133,20 @@ export default function GscTeamProfile() {
     const sendHeight = () => {
       try {
         if (window.parent && window.parent !== window) {
-          // Get actual content height
-          const body = document.body;
-          const html = document.documentElement;
-          const height = Math.max(
-            body.scrollHeight,
-            body.offsetHeight,
-            html.clientHeight,
-            html.scrollHeight,
-            html.offsetHeight,
-            2500 // Minimum height for profiles page
-          );
-          window.parent.postMessage({ type: 'iframeHeight', height: height + 100 }, '*');
+          const height = Math.max(document.body.scrollHeight, 2500);
+          window.parent.postMessage({ type: 'iframeHeight', height }, '*');
         }
       } catch (e) {
         /* ignore cross-origin */
       }
     };
 
-    // Send height after delays to ensure content is rendered
-    setTimeout(sendHeight, 100);
-    setTimeout(sendHeight, 300);
+    setTimeout(sendHeight, 200);
     setTimeout(sendHeight, 500);
-    setTimeout(sendHeight, 1000);
     sendHeight();
-    const ro = new ResizeObserver(sendHeight);
-    ro.observe(document.body);
-    window.addEventListener('resize', sendHeight);
-    const interval = setInterval(sendHeight, 300);
+    const interval = setInterval(sendHeight, 500);
 
     return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', sendHeight);
       clearInterval(interval);
     };
   }, [profiles, filters, currentPage]);
@@ -186,7 +168,7 @@ export default function GscTeamProfile() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
-          <aside className="lg:col-span-1 min-w-[380px] max-w-[450px] w-full">
+          <aside className="lg:col-span-1">
             <FilterPanel
               roles={roles}
               skills={skills}
