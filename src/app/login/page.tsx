@@ -97,13 +97,8 @@ export default function LoginPage() {
     const sendHeight = () => {
       try {
         if (window.parent && window.parent !== window) {
-          // Get actual content height, not viewport height
-          const loginCard = document.getElementById('login-card');
-          const contentHeight = loginCard 
-            ? loginCard.getBoundingClientRect().bottom + 100 
-            : document.body.scrollHeight;
-          const height = Math.max(600, contentHeight);
-          window.parent.postMessage({ type: 'iframeHeight', height }, '*');
+          // Send fixed height for login page - just enough to show the form centered
+          window.parent.postMessage({ type: 'iframeHeight', height: 650 }, '*');
         }
       } catch (e) {
         /* ignore cross-origin errors */
@@ -112,6 +107,7 @@ export default function LoginPage() {
 
     // initial send after a short delay for layout
     setTimeout(sendHeight, 100);
+    setTimeout(sendHeight, 300);
     sendHeight();
 
     // observe resizes and DOM changes
