@@ -228,41 +228,6 @@ export default function GscTeamProfile() {
                     <ProfileCard key={profile.id} profile={profile} />
                   ))}
                 </div>
-
-                {/* Pagination - Bottom */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex justify-center items-center gap-2">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                    >
-                      Previous
-                    </button>
-                    <div className="flex gap-2">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-4 py-2 rounded-lg font-medium ${
-                            currentPage === page
-                              ? 'bg-indigo-600 text-white'
-                              : 'border border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
               </>
             ) : (
               <div className="text-center py-16 bg-white rounded-lg shadow-md">
