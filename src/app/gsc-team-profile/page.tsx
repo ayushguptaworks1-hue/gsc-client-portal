@@ -182,7 +182,7 @@ export default function GscTeamProfile() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
-          <aside className="lg:col-span-1 min-w-[340px] max-w-[400px] w-full">
+          <aside className="lg:col-span-1 min-w-[380px] max-w-[450px] w-full">
             <FilterPanel
               roles={roles}
               skills={skills}
