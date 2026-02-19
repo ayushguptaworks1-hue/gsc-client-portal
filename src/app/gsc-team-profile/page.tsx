@@ -141,22 +141,26 @@ export default function GscTeamProfile() {
             body.offsetHeight,
             html.clientHeight,
             html.scrollHeight,
-            html.offsetHeight
+            html.offsetHeight,
+            2500 // Minimum height for profiles page
           );
-          window.parent.postMessage({ type: 'iframeHeight', height: height + 50 }, '*');
+          window.parent.postMessage({ type: 'iframeHeight', height: height + 100 }, '*');
         }
       } catch (e) {
         /* ignore cross-origin */
       }
     };
 
-    // Send height after a short delay to let content render
-    setTimeout(sendHeight, 200);
+    // Send height after delays to ensure content is rendered
+    setTimeout(sendHeight, 100);
+    setTimeout(sendHeight, 300);
+    setTimeout(sendHeight, 500);
+    setTimeout(sendHeight, 1000);
     sendHeight();
     const ro = new ResizeObserver(sendHeight);
     ro.observe(document.body);
     window.addEventListener('resize', sendHeight);
-    const interval = setInterval(sendHeight, 500);
+    const interval = setInterval(sendHeight, 300);
 
     return () => {
       ro.disconnect();
