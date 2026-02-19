@@ -133,18 +133,30 @@ export default function GscTeamProfile() {
     const sendHeight = () => {
       try {
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'iframeHeight', height: document.documentElement.scrollHeight }, '*');
+          // Get actual content height
+          const body = document.body;
+          const html = document.documentElement;
+          const height = Math.max(
+            body.scrollHeight,
+            body.offsetHeight,
+            html.clientHeight,
+            html.scrollHeight,
+            html.offsetHeight
+          );
+          window.parent.postMessage({ type: 'iframeHeight', height: height + 50 }, '*');
         }
       } catch (e) {
         /* ignore cross-origin */
       }
     };
 
+    // Send height after a short delay to let content render
+    setTimeout(sendHeight, 200);
     sendHeight();
     const ro = new ResizeObserver(sendHeight);
-    ro.observe(document.documentElement);
+    ro.observe(document.body);
     window.addEventListener('resize', sendHeight);
-    const interval = setInterval(sendHeight, 800);
+    const interval = setInterval(sendHeight, 500);
 
     return () => {
       ro.disconnect();
