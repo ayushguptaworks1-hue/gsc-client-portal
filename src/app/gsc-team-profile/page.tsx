@@ -34,11 +34,25 @@ export default function GscTeamProfile() {
     try {
       const sessionRes = await fetch('/api/auth/session');
       const sessionData = await sessionRes.json();
-      setSession(sessionData);
-
-      if (!sessionData.authenticated) {
-        router.push('/login');
-        return;
+      // Server session first
+      if (sessionData && sessionData.authenticated) {
+        setSession(sessionData);
+      } else {
+        // Fallback: check localStorage for iframe/third-party cookie environments
+        try {
+          const saved = localStorage.getItem('gsc_client_session_data');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            setSession(parsed);
+          } else {
+            router.push('/login');
+            return;
+          }
+        } catch (e) {
+          console.warn('localStorage parse failed', e);
+          router.push('/login');
+          return;
+        }
       }
 
       const { data, error } = await supabase
@@ -74,6 +88,7 @@ export default function GscTeamProfile() {
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    localStorage.removeItem('gsc_client_session');
     router.push('/login');
   };
 
@@ -151,11 +166,11 @@ export default function GscTeamProfile() {
 
   return (
     <div className="bg-white">
-      {/* Main Content - Natural height for WordPress embed */}
+      {/* Main Content - Natural height for WordPress embed, no inner scrolls */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
-          <aside className="lg:col-span-1">
+          <aside className="lg:col-span-1 min-w-[340px] max-w-[400px] w-full">
             <FilterPanel
               roles={roles}
               skills={skills}

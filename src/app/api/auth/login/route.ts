@@ -9,6 +9,7 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const { loginId, password } = await request.json();
+    console.log('Login attempt:', { loginId });
 
     // Read clients from Supabase
     const { data: clients, error } = await supabase
@@ -21,17 +22,20 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Supabase error:', error);
       return NextResponse.json(
-        { success: false, message: 'Login failed' },
+        { success: false, message: 'Login failed', error: String(error) },
         { status: 500 }
       );
     }
 
     const client = clients?.[0];
+    console.log('Client found:', client);
 
     if (client) {
       const response = NextResponse.json({
         success: true,
         companyName: client.company_name,
+        clientId: client.id,
+        hiredMembers: client.hired_members || [],
       });
 
       // Set session cookie - sameSite: 'none' required for cross-origin iframe
@@ -51,13 +55,15 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
+    console.warn('Invalid login:', { loginId, password });
     return NextResponse.json(
       { success: false, message: 'Invalid login ID or password' },
       { status: 401 }
     );
-  } catch {
+  } catch (err) {
+    console.error('Login error:', err);
     return NextResponse.json(
-      { success: false, message: 'Login failed' },
+      { success: false, message: 'Login failed', error: String(err) },
       { status: 500 }
     );
   }

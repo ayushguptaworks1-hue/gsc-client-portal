@@ -27,15 +27,16 @@ export default function Dashboard() {
 
   const MANAGER_PASSWORD = 'gsc2024admin';
 
-  useEffect(() => {
-    const saved = localStorage.getItem('gsc_manager_auth');
-    if (saved === 'true') {
-      setAuthenticated(true);
-      loadData();
-    } else {
-      setLoading(false);
-    }
-  }, []);
+    // Persistent session: check localStorage on mount
+    useEffect(() => {
+      const saved = localStorage.getItem('gsc_manager_auth');
+      if (saved === 'true') {
+        setAuthenticated(true);
+        loadData();
+      } else {
+        setLoading(false);
+      }
+    }, []);
 
   const handleManagerLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -504,7 +505,7 @@ export default function Dashboard() {
                           <p className="text-sm font-semibold text-gray-700 mb-3">
                             Toggle profile visibility for {client.companyName}:
                           </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
                             {profiles.map((profile) => {
                               const isHidden = client.hiredMembers.includes(profile.id);
                               return (
