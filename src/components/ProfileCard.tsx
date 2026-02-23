@@ -2,6 +2,7 @@
 
 import { Profile } from '@/types/profile';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ProfileCardProps {
   profile: Profile;
@@ -35,6 +36,8 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInIframe, setIsInIframe] = useState(false);
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     visitorName: '',
@@ -46,8 +49,24 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
   const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxFnumFLV0Uon-pbj4A4HJaQrqdBmpq2S0M_84LCYVmUcFkBNqKk6g1OWooOlua-xEX9g/exec';
 
   useEffect(() => {
+    setIsInIframe(window.parent !== window);
+    setPortalRoot(document.body);
+  }, []);
+
+  useEffect(() => {
     if (showContactModal && modalRef.current) {
-      modalRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // On mobile inside iframe, position:fixed is buggy — scroll to top first
+      const isInIframe = window.parent !== window;
+      if (isInIframe) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Also tell parent to scroll iframe into view
+        window.parent.postMessage({ type: 'scrollToIframe' }, '*');
+      }
+      setTimeout(() => {
+        if (modalRef.current) {
+          modalRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
     }
   }, [showContactModal]);
 
@@ -194,9 +213,12 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
         </div>
       </div>
 
-      {/* Contact Modal */}
-      {showContactModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-4" onClick={() => setShowContactModal(false)}>
+      {/* Contact Modal - rendered via portal at body level for mobile iframe compatibility */}
+      {showContactModal && portalRoot && createPortal(
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-4"
+          onClick={() => setShowContactModal(false)}
+        >
           <div ref={modalRef} className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {showSuccess && (
               <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
@@ -267,7 +289,8 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        portalRoot
       )}
     </div>
   );
