@@ -61,7 +61,7 @@ export default function FilterPanel({ roles, skills, initialFilters, onFilterCha
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white rounded-lg shadow-md p-6" style={{ position: 'relative', zIndex: 1, display: 'block' }}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Filters</h2>
         <button

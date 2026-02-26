@@ -163,12 +163,12 @@ export default function GscTeamProfile() {
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-white" style={{ overflow: 'visible', position: 'relative' }}>
       {/* Main Content - Natural height for WordPress embed, no inner scrolls */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
-          <aside className="w-full lg:w-80 flex-shrink-0">
+          <aside className="w-full lg:w-80 flex-shrink-0" style={{ position: 'relative', zIndex: 1 }}>
             <FilterPanel
               roles={roles}
               skills={skills}
