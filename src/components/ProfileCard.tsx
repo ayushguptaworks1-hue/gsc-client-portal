@@ -161,6 +161,28 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
           <span className="text-sm">{profile.experience} experience</span>
         </div>
 
+        {profile.hoursPerWeek && (
+          <div className="flex items-center text-gray-600 mb-4">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium text-green-600">{profile.hoursPerWeek}</span>
+          </div>
+        )}
+
+        {profile.transitionTime && (
+          <div className="flex items-center text-gray-600 mb-4">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="text-sm">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                {profile.transitionTime}
+              </span>
+            </span>
+          </div>
+        )}
+
         {profile.location && (
           <div className="flex items-center text-gray-600 mb-4">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

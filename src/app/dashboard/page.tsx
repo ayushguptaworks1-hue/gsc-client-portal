@@ -73,6 +73,8 @@ export default function Dashboard() {
         email: p.email ? String(p.email) : undefined,
         location: p.location ? String(p.location) : undefined,
         cvUrl: p.cv_url ? String(p.cv_url) : undefined,
+        hoursPerWeek: p.hours_per_week ? String(p.hours_per_week) : undefined,
+        transitionTime: p.transition_time ? String(p.transition_time) : undefined,
       }));
 
       setProfiles(mapped);

@@ -12,4 +12,6 @@ export interface Profile {
   email?: string;
   location?: string;
   cvUrl?: string;
+  hoursPerWeek?: string;
+  transitionTime?: string;
 }
