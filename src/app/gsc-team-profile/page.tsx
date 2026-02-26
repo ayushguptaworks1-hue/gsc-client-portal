@@ -166,9 +166,9 @@ export default function GscTeamProfile() {
     <div className="bg-white">
       {/* Main Content - Natural height for WordPress embed, no inner scrolls */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
-          <aside className="lg:col-span-1">
+          <aside className="w-full lg:w-80 flex-shrink-0">
             <FilterPanel
               roles={roles}
               skills={skills}
@@ -178,7 +178,7 @@ export default function GscTeamProfile() {
           </aside>
 
           {/* Profiles Grid */}
-          <div className="lg:col-span-3">
+          <div className="flex-1">
             <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
               <p className="text-gray-700 text-lg">
                 Showing <span className="font-bold text-indigo-600">{currentProfiles.length}</span> of{' '}
