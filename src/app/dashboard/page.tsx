@@ -255,7 +255,7 @@ export default function Dashboard() {
               <p className="text-3xl font-bold text-orange-600">
                 {clients.reduce((sum, c) => sum + c.hiredMembers.length, 0)}
               </p>
-              <p className="text-sm text-gray-500">Total Hidden Profiles</p>
+              <p className="text-sm text-gray-500">Total Assigned Profiles</p>
             </div>
           </div>
         </div>
@@ -310,12 +310,12 @@ export default function Dashboard() {
                     <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Experience</th>
                     <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Availability</th>
                     <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Skills</th>
-                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Hidden For</th>
+                    <th className="pb-3 text-xs font-semibold text-gray-500 uppercase">Shown For</th>
                   </tr>
                 </thead>
                 <tbody>
                   {profiles.map((profile, index) => {
-                    const hiddenFor = clients.filter(c => c.hiredMembers.includes(profile.id));
+                    const shownFor = clients.filter(c => c.hiredMembers.includes(profile.id));
                     return (
                       <tr key={profile.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
                         <td className="py-4 text-sm text-gray-500">{index + 1}</td>
@@ -363,10 +363,10 @@ export default function Dashboard() {
                           </div>
                         </td>
                         <td className="py-4">
-                          {hiddenFor.length > 0 ? (
+                          {shownFor.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
-                              {hiddenFor.map(c => (
-                                <span key={c.id} className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full border border-red-200">
+                              {shownFor.map(c => (
+                                <span key={c.id} className="px-2 py-0.5 bg-green-50 text-green-600 text-xs rounded-full border border-green-200">
                                   {c.companyName}
                                 </span>
                               ))}
@@ -405,8 +405,9 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-6">
                 {clients.map((client) => {
-                  const visibleCount = profiles.length - client.hiredMembers.length;
-                  const hiddenNames = client.hiredMembers.map(id => getProfileName(id));
+                  const shownCount = client.hiredMembers.length;
+                  const hiddenCount = profiles.length - client.hiredMembers.length;
+                  const shownNames = client.hiredMembers.map(id => getProfileName(id));
                   const isExpanded = selectedClient?.id === client.id;
                   const passwordVisible = showPasswords[client.id];
 
@@ -463,19 +464,19 @@ export default function Dashboard() {
                               <div className="bg-gray-50 rounded-lg p-3">
                                 <p className="text-xs text-gray-500 font-medium mb-1">Profile Access</p>
                                 <p className="text-sm font-bold">
-                                  <span className="text-green-600">{visibleCount} visible</span>
-                                  {client.hiredMembers.length > 0 && (
-                                    <span className="text-red-600"> / {client.hiredMembers.length} hidden</span>
+                                  <span className="text-green-600">{shownCount} shown</span>
+                                  {hiddenCount > 0 && (
+                                    <span className="text-red-600"> / {hiddenCount} hidden</span>
                                   )}
                                 </p>
                               </div>
                             </div>
 
-                            {/* Hidden profile names - quick preview */}
-                            {hiddenNames.length > 0 && (
+                            {/* Shown profile names - quick preview */}
+                            {shownNames.length > 0 && (
                               <div className="mt-3">
                                 <p className="text-xs text-gray-500">
-                                  Hidden: <span className="font-medium text-red-600">{hiddenNames.join(', ')}</span>
+                                  Shown: <span className="font-medium text-green-600">{shownNames.join(', ')}</span>
                                 </p>
                               </div>
                             )}
@@ -509,14 +510,14 @@ export default function Dashboard() {
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
                             {profiles.map((profile) => {
-                              const isHidden = client.hiredMembers.includes(profile.id);
+                              const isShown = client.hiredMembers.includes(profile.id);
                               return (
                                 <div
                                   key={profile.id}
                                   className={`flex items-center justify-between p-3 rounded-lg border transition cursor-pointer ${
-                                    isHidden
-                                      ? 'bg-red-50 border-red-200 hover:bg-red-100'
-                                      : 'bg-green-50 border-green-200 hover:bg-green-100'
+                                    isShown
+                                      ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                                      : 'bg-red-50 border-red-200 hover:bg-red-100'
                                   }`}
                                   onClick={() => toggleHiredMember(client.id, profile.id)}
                                 >
@@ -526,12 +527,12 @@ export default function Dashboard() {
                                   </div>
                                   <span
                                     className={`ml-2 px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
-                                      isHidden
-                                        ? 'bg-red-100 text-red-700'
-                                        : 'bg-green-100 text-green-700'
+                                      isShown
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-red-100 text-red-700'
                                     }`}
                                   >
-                                    {isHidden ? 'HIDDEN' : 'VISIBLE'}
+                                    {isShown ? 'VISIBLE' : 'HIDDEN'}
                                   </span>
                                 </div>
                               );

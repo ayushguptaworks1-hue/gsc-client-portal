@@ -94,9 +94,9 @@ export default function GscTeamProfile() {
     router.push('/login');
   };
 
-  // INVISIBLE FILTERING - Remove hired members BEFORE any user filters
+  // INVISIBLE FILTERING - Only show explicitly assigned profiles
   const availableProfiles = useMemo(() => {
-    return profiles.filter(p => !session.hiredMembers?.includes(p.id));
+    return profiles.filter(p => session.hiredMembers?.includes(p.id));
   }, [profiles, session.hiredMembers]);
 
   const roles = useMemo(() => {

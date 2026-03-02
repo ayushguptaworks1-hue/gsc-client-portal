@@ -3,6 +3,6 @@ export interface Client {
   companyName: string;
   loginId: string;
   password: string;
-  hiredMembers: string[]; // Array of profile IDs that are hidden from this client
+  hiredMembers: string[]; // Array of profile IDs that are shown to this client (allowlist)
   createdAt: string;
 }
