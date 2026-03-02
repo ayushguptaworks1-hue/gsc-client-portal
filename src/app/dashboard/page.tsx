@@ -151,14 +151,7 @@ export default function Dashboard() {
     }
   };
 
-  const toggleHiredMember = async (clientId: string, profileId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    if (!client) return;
-
-    const newHired = client.hiredMembers.includes(profileId)
-      ? client.hiredMembers.filter((id) => id !== profileId)
-      : [...client.hiredMembers, profileId];
-
+  const updateClientHiredMembers = async (clientId: string, newHired: string[]) => {
     const { error } = await supabase
       .from('clients')
       .update({ hired_members: newHired })
@@ -176,6 +169,31 @@ export default function Dashboard() {
     if (selectedClient?.id === clientId) {
       setSelectedClient(updated.find((c) => c.id === clientId) || null);
     }
+  };
+
+  const addProfileToClient = (clientId: string, profileId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client || client.hiredMembers.includes(profileId)) return;
+    updateClientHiredMembers(clientId, [...client.hiredMembers, profileId]);
+  };
+
+  const removeProfileFromClient = (clientId: string, profileId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    updateClientHiredMembers(clientId, client.hiredMembers.filter(id => id !== profileId));
+  };
+
+  const moveProfileInClient = (clientId: string, profileId: string, direction: 'up' | 'down') => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    const arr = [...client.hiredMembers];
+    const idx = arr.indexOf(profileId);
+    if (idx === -1) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === arr.length - 1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    [arr[idx], arr[swapIdx]] = [arr[swapIdx], arr[idx]];
+    updateClientHiredMembers(clientId, arr);
   };
 
   const getProfileName = (profileId: string) => {
@@ -502,42 +520,92 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      {/* Expanded: Profile Toggle Panel */}
+                      {/* Expanded: Profile Reorder Panel */}
                       {isExpanded && (
                         <div className="border-t bg-gray-50 p-5">
+                          {/* Assigned Profiles - Ordered */}
                           <p className="text-sm font-semibold text-gray-700 mb-3">
-                            Toggle profile visibility for {client.companyName}:
+                            Assigned Profiles for {client.companyName} ({client.hiredMembers.length}):
                           </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
-                            {profiles.map((profile) => {
-                              const isShown = client.hiredMembers.includes(profile.id);
-                              return (
-                                <div
-                                  key={profile.id}
-                                  className={`flex items-center justify-between p-3 rounded-lg border transition cursor-pointer ${
-                                    isShown
-                                      ? 'bg-green-50 border-green-200 hover:bg-green-100'
-                                      : 'bg-red-50 border-red-200 hover:bg-red-100'
-                                  }`}
-                                  onClick={() => toggleHiredMember(client.id, profile.id)}
-                                >
-                                  <div className="min-w-0 flex-1">
-                                    <p className="font-medium text-gray-900 text-sm truncate">{profile.name}</p>
-                                    <p className="text-xs text-gray-500 truncate">{profile.role}</p>
-                                  </div>
-                                  <span
-                                    className={`ml-2 px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
-                                      isShown
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-red-100 text-red-700'
-                                    }`}
+                          {client.hiredMembers.length > 0 ? (
+                            <div className="space-y-2 mb-6 max-h-[40vh] overflow-y-auto">
+                              {client.hiredMembers.map((pid, idx) => {
+                                const profile = profiles.find(p => p.id === pid);
+                                if (!profile) return null;
+                                return (
+                                  <div
+                                    key={pid}
+                                    className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg"
                                   >
-                                    {isShown ? 'VISIBLE' : 'HIDDEN'}
-                                  </span>
+                                    <span className="text-sm font-bold text-gray-400 w-6 text-center">{idx + 1}</span>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="font-medium text-gray-900 text-sm truncate">{profile.name}</p>
+                                      <p className="text-xs text-gray-500 truncate">{profile.role}</p>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); moveProfileInClient(client.id, pid, 'up'); }}
+                                        disabled={idx === 0}
+                                        className={`p-1.5 rounded transition ${idx === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-green-100 hover:text-gray-700'}`}
+                                        title="Move up"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); moveProfileInClient(client.id, pid, 'down'); }}
+                                        disabled={idx === client.hiredMembers.length - 1}
+                                        className={`p-1.5 rounded transition ${idx === client.hiredMembers.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-green-100 hover:text-gray-700'}`}
+                                        title="Move down"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); removeProfileFromClient(client.id, pid); }}
+                                        className="p-1.5 rounded text-red-400 hover:bg-red-100 hover:text-red-600 transition ml-1"
+                                        title="Remove"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-400 mb-6">No profiles assigned yet.</p>
+                          )}
+
+                          {/* Available Profiles - Not assigned */}
+                          {(() => {
+                            const unassigned = profiles.filter(p => !client.hiredMembers.includes(p.id));
+                            if (unassigned.length === 0) return null;
+                            return (
+                              <>
+                                <p className="text-sm font-semibold text-gray-700 mb-3">
+                                  Available Profiles ({unassigned.length}):
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[30vh] overflow-y-auto">
+                                  {unassigned.map((profile) => (
+                                    <div
+                                      key={profile.id}
+                                      className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                                    >
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-medium text-gray-900 text-sm truncate">{profile.name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{profile.role}</p>
+                                      </div>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); addProfileToClient(client.id, profile.id); }}
+                                        className="ml-2 px-2.5 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full hover:bg-green-200 transition whitespace-nowrap"
+                                      >
+                                        + Add
+                                      </button>
+                                    </div>
+                                  ))}
                                 </div>
-                              );
-                            })}
-                          </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>

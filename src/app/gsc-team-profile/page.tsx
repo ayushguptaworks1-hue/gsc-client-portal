@@ -94,9 +94,15 @@ export default function GscTeamProfile() {
     router.push('/login');
   };
 
-  // INVISIBLE FILTERING - Only show explicitly assigned profiles
+  // INVISIBLE FILTERING - Only show explicitly assigned profiles, in the order set by manager
   const availableProfiles = useMemo(() => {
-    return profiles.filter(p => session.hiredMembers?.includes(p.id));
+    if (!session.hiredMembers || session.hiredMembers.length === 0) return [];
+    // Build a map for quick lookup
+    const profileMap = new Map(profiles.map(p => [p.id, p]));
+    // Return profiles in the exact order of hiredMembers array
+    return session.hiredMembers
+      .map(id => profileMap.get(id))
+      .filter((p): p is Profile => p !== undefined);
   }, [profiles, session.hiredMembers]);
 
   const roles = useMemo(() => {
