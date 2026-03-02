@@ -13,14 +13,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Prevent double scrollbar when embedded in iframe */
-html {
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
-}
-
+/* Hide only the page-level scrollbar (for iframe embed), keeps element scrollbars intact */
 html::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
+}
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
