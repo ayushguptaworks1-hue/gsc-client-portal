@@ -24,6 +24,8 @@ export default function Dashboard() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   // Show/hide credentials
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  // Editing client details
+  const [editingClient, setEditingClient] = useState<{ id: string; field: 'companyName' | 'password'; value: string } | null>(null);
 
   const MANAGER_PASSWORD = 'gsc2024admin';
 
@@ -149,6 +151,33 @@ export default function Dashboard() {
       setClients(clients.filter((c) => c.id !== id));
       if (selectedClient?.id === id) setSelectedClient(null);
     }
+  };
+
+  const saveClientEdit = async () => {
+    if (!editingClient || !editingClient.value.trim()) {
+      setEditingClient(null);
+      return;
+    }
+    const updateData = editingClient.field === 'companyName'
+      ? { company_name: editingClient.value.trim() }
+      : { password: editingClient.value.trim() };
+
+    const { error } = await supabase
+      .from('clients')
+      .update(updateData)
+      .eq('id', editingClient.id);
+
+    if (error) {
+      alert('Error updating client: ' + error.message);
+      return;
+    }
+
+    setClients(clients.map(c =>
+      c.id === editingClient.id
+        ? { ...c, [editingClient.field]: editingClient.value.trim() }
+        : c
+    ));
+    setEditingClient(null);
   };
 
   const updateClientHiredMembers = async (clientId: string, newHired: string[]) => {
@@ -444,11 +473,33 @@ export default function Dashboard() {
                                   {client.companyName.charAt(0)}
                                 </span>
                               </div>
-                              <div>
-                                <h3 className="text-lg font-bold text-gray-900">{client.companyName}</h3>
-                                <p className="text-xs text-gray-400">Created: {new Date(client.createdAt).toLocaleDateString()}</p>
+                              <div className="flex items-center gap-2">
+                                {editingClient?.id === client.id && editingClient.field === 'companyName' ? (
+                                  <input
+                                    type="text"
+                                    value={editingClient.value}
+                                    onChange={(e) => setEditingClient({ ...editingClient, value: e.target.value })}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') saveClientEdit(); if (e.key === 'Escape') setEditingClient(null); }}
+                                    onBlur={() => saveClientEdit()}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-lg font-bold text-gray-900 border border-indigo-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <>
+                                    <h3 className="text-lg font-bold text-gray-900">{client.companyName}</h3>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setEditingClient({ id: client.id, field: 'companyName', value: client.companyName }); }}
+                                      className="text-gray-400 hover:text-indigo-600 transition"
+                                      title="Edit company name"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </div>
+                            <p className="text-xs text-gray-400 -mt-2 mb-3 ml-[52px]">Created: {new Date(client.createdAt).toLocaleDateString()}</p>
 
                             {/* Credentials */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
@@ -458,26 +509,47 @@ export default function Dashboard() {
                               </div>
                               <div className="bg-gray-50 rounded-lg p-3">
                                 <p className="text-xs text-gray-500 font-medium mb-1">Password</p>
-                                <div className="flex items-center gap-2">
-                                  <p className="font-mono text-sm font-bold text-gray-900">
-                                    {passwordVisible ? client.password : '••••••••'}
-                                  </p>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowPasswords(prev => ({ ...prev, [client.id]: !prev[client.id] }));
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      {passwordVisible ? (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                      ) : (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                      )}
-                                    </svg>
-                                  </button>
-                                </div>
+                                {editingClient?.id === client.id && editingClient.field === 'password' ? (
+                                  <input
+                                    type="text"
+                                    value={editingClient.value}
+                                    onChange={(e) => setEditingClient({ ...editingClient, value: e.target.value })}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') saveClientEdit(); if (e.key === 'Escape') setEditingClient(null); }}
+                                    onBlur={() => saveClientEdit()}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="font-mono text-sm font-bold text-gray-900 border border-indigo-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-mono text-sm font-bold text-gray-900">
+                                      {passwordVisible ? client.password : '••••••••'}
+                                    </p>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowPasswords(prev => ({ ...prev, [client.id]: !prev[client.id] }));
+                                      }}
+                                      className="text-gray-400 hover:text-gray-600"
+                                      title="Show/hide password"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        {passwordVisible ? (
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                        ) : (
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        )}
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setEditingClient({ id: client.id, field: 'password', value: client.password }); }}
+                                      className="text-gray-400 hover:text-indigo-600 transition"
+                                      title="Edit password"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                               <div className="bg-gray-50 rounded-lg p-3">
                                 <p className="text-xs text-gray-500 font-medium mb-1">Profile Access</p>
